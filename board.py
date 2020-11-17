@@ -1,13 +1,14 @@
 import tkinter as tk
-from settings import *
+from setting import *
 
 
 class LudoBoard:
 
     def __init__(self, master):
-        self.canvas = tk.Canvas(master, width=Board.BOARD_WIDTH, height=Board.BOARD_HEIGHT, bg='#b5b5b5',
+        self.canvas = tk.Canvas(master, width=Board.BOARD_WIDTH, height=Board.BOARD_HEIGHT, bg=Color.DEFAULT,
                                 highlightthickness=0)
-        self.side_bar = tk.Canvas(master, width=250, height=630, bg='#fff', highlightthickness=0)
+        self.side_bar = tk.Canvas(master, width=250, height=630, bg='white', highlightthickness=0)
+        self.label = tk.Label(self.side_bar, text='Players:', bg='white', font=("Times", "23", "bold italic"))
         self.status_bar = tk.Label(master, text=Text.MADE_BY, bd=1, relief=tk.SUNKEN)
 
     def draw_rectangle(self, lx, ly, bx, by, color, width):
@@ -34,8 +35,8 @@ class LudoBoard:
         for i in range(6, 9):
             for j in range(15):
                 if j not in range(6, 9) and (i != 7 or j == 0 or j == 14):
-                    self.draw_rectangle(i + 0.5, j + 0.5, i + 1.5, j + 1.5, '#fff', 1)
-                    self.draw_rectangle(j + 0.5, i + 0.5, j + 1.5, i + 1.5, '#fff', 1)
+                    self.draw_rectangle(i + 0.5, j + 0.5, i + 1.5, j + 1.5, Color.DEFAULT, 1)
+                    self.draw_rectangle(j + 0.5, i + 0.5, j + 1.5, i + 1.5, Color.DEFAULT, 1)
                 else:
                     if j < 6:
                         self.draw_rectangle(i + 0.5, j + 0.5, i + 1.5, j + 1.5, Color.YELLOW, 1)
@@ -55,6 +56,16 @@ class LudoBoard:
                 self.draw_rectangle(j + 0.5, i + 0.5, j + 1.5, i + 1.5, Color.GREEN, 1)
             else:
                 self.draw_rectangle(j + 0.5, i + 0.5, j + 1.5, i + 1.5, Color.BLUE, 1)
+
+    # def start(self):
+    #     self.arrow_l = PhotoImage(file='Images/arrow_l.png')
+    #     self.arrow_r = PhotoImage(file='Images/arrow_r.png')
+    #     self.arrow_t = PhotoImage(file='Images/arrow_t.png')
+    #     self.arrow_b = PhotoImage(file='Images/arrow_b.png')
+    #     tk.Label(image=self.arrow_l, bg=Color.BLUE).place(x=915, y=343)
+    #     tk.Label(image=self.arrow_t, bg=Color.RED).place(x=635, y=543)
+    #     tk.Label(image=self.arrow_r, bg=Color.GREEN).place(x=435, y=263)
+    #     tk.Label(image=self.arrow_b, bg=Color.YELLOW).place(x=715, y=63)
 
     def home(self):
 
@@ -96,12 +107,15 @@ class LudoBoard:
 
     def create_panel(self):
         self.side_bar.place(x=0, y=0)
+        self.label.place(x=65, y=0)
         self.side_bar.create_line(249, 0, 249, 630)
+        self.side_bar.create_line(3, 280, 246, 280, dash=(4, 2))
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
     def create(self):
         self.path()
         self.home()
+        # self.start()
         self.create_panel()
 
     def get_canvas(self):
