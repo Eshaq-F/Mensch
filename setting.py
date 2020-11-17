@@ -1,13 +1,10 @@
-from tkinter import PhotoImage
-
-
 class Color:
     GREEN = '#00cc00'
     RED = '#F71313'
     YELLOW = '#FFFF00'
     BLUE = '#3575EC'
     DEFAULT = '#b5b5b5'
-    # GRAY = '#A9A9A9'
+    WHITE = '#fff'
 
 
 class Board:
@@ -29,6 +26,13 @@ class Members:
 
 class Text:
     MADE_BY = 'Made by: Eshaq Farrokhi'
+    HTP = 'Welcome to our Mensch(Ludo) game!\n' \
+          'To start the game first, you should login by press "Add Player" button in menu > Game.' \
+          'After adding at least 2 members; you can press "Start game" to start the game :)\n' \
+          'In the left panel you can see the players ,turn and dice number. ' \
+          'You can roll a dice in your turn and go on until treading all the home paths and jump into the maze;' \
+          'in this way you should be careful! Because the other pieces can attack you.' \
+          'Each player that has the most jumped piece will win, so move on.'
 
 
 class Path:
