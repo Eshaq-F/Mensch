@@ -1,4 +1,5 @@
 import tkinter.messagebox
+import logging
 from tkinter import ttk
 from time import sleep
 from random import choice
@@ -7,7 +8,7 @@ from setting import *
 from board import *
 
 
-class Coin:
+class Piece:
 
     def __init__(self, master, x, y, color, path_list, flag):
         self.canvas = master
@@ -19,7 +20,7 @@ class Coin:
         self.curr_index = -1
         self.coin = ImageTk.PhotoImage(Image.open('Images/{}.png'.format(color)))
         self.img = self.canvas.create_image(x, y, anchor=tk.NW, image=self.coin)
-        self.canvas.tag_bind(self.img, '<1>', self.moveCoin)
+        self.canvas.tag_bind(self.img, '<1>', self.move)
         self.disable = True
         self.path_list = path_list
         self.player = None
@@ -27,7 +28,7 @@ class Coin:
         self.win = 0
         self.pad_x = 0
 
-    def moveCoin(self, event):
+    def move(self, event):
 
         if self.disable:
             return
@@ -37,7 +38,7 @@ class Coin:
             return
 
         if roll[-1] == 6:
-            tkinter.messagebox.showerror('Error', 'You got 6, Please Roll Again')
+            tkinter.messagebox.showerror('Error', 'You got 6, So please Roll Again.')
             return
 
         if len(roll) != 0:
@@ -48,7 +49,7 @@ class Coin:
 
         check = (False, 0, 0)
         congrats = False
-        if self.is_at_home():
+        if self.at_home():
             if 6 in roll:
                 check = self.can_attack(0)
                 self.canvas.coords(self.img, self.path_list[0][0] + 4 + self.pad_x, self.path_list[0][1] + 4)
@@ -73,7 +74,7 @@ class Coin:
             self.curr_x = self.path_list[self.curr_index][0]
             self.curr_y = self.path_list[self.curr_index][1]
             if check[0]:
-                colors[check[1]][check[2]].goto_home()
+                colors[check[1]][check[2]].go_home()
 
             self.canvas.update()
             sleep(0.05)
@@ -81,19 +82,20 @@ class Coin:
             if self.curr_index == len(self.path_list) - 1:
                 self.win = 1
                 tkinter.messagebox.showinfo('INFO', '** Congratulations **\nPlease Roll Dice Again!')
+                winners.append(self.player)
                 congrats = self.congratulations()
 
             if check[0]:
                 tkinter.messagebox.showinfo('INFO', 'You killed another coin! Now you get another chance.')
                 congrats = self.congratulations()
 
-        if self.is_player_won():
+        if self.player_win():
             tkinter.messagebox.showinfo('INFO', '{} Wins'.format(self.color.title()))
             position.append(self.player.title())
             Dice.roll = []
             Dice.set(self.flag)
 
-        if self.is_gameover():
+        if self.game_over():
             root.quit()
 
         if not check[0] and not congrats:
@@ -113,26 +115,26 @@ class Coin:
         else:
             self.disable = True
 
-    def is_at_home(self):
+    def at_home(self):
         return self.curr_x == self.home_x and self.curr_y == self.home_y
 
     def check_home(self):
         count = 0
-        for goti in colors[self.flag]:
-            if goti.is_at_home():
+        for piece in colors[self.flag]:
+            if piece.at_home():
                 count += 1
 
         return count
 
-    def is_player_won(self):
+    def player_win(self):
         reached = 0
-        for goti in colors[self.flag]:
-            if goti.win:
+        for piece in colors[self.flag]:
+            if piece.win:
                 reached += 1
 
         return reached == 4
 
-    def is_gameover(self):
+    def game_over(self):
         color_reached = 0
 
         for i in range(len(colors)):
@@ -181,7 +183,7 @@ class Coin:
             self.pad_x = 0
         return False, 0, 0
 
-    def goto_home(self):
+    def go_home(self):
         self.canvas.coords(self.img, self.home_x, self.home_y)
         self.curr_x = self.home_x
         self.curr_y = self.home_y
@@ -191,7 +193,7 @@ class Coin:
         if len(Dice.roll) == 0:
             Dice.set(self.flag)
 
-    def set_playername(self, player):
+    def set_player_name(self, player):
         self.player = player
 
 
@@ -202,12 +204,13 @@ class Dice:
 
     @classmethod
     def rolling(cls):
-        temp = choice(range(1, 9))
-        if temp > 6:
-            temp = 6
+        result()
+        num = choice(range(1, 9))
+        if num > 6:
+            num = 6
 
         if len(cls.roll) == 0 or cls.roll[-1] == 6 or cls.append_state:
-            cls.roll.append(temp)
+            cls.roll.append(num)
             cls.append_state = False
 
         tk.Label(text='{}'.format(' + '.join([str(x) for x in cls.roll])), width=8, height=2,
@@ -239,7 +242,7 @@ class Dice:
         cls.chance = flag
         if flag == len(colors):
             cls.chance = flag = 0
-        if colors[cls.chance][0].is_player_won():
+        if colors[cls.chance][0].player_win():
             Dice.set(cls.chance)
         else:
             for i in range(len(colors)):
@@ -268,11 +271,11 @@ class Dice:
     def check_move_possibility(cls):
         check_1 = 0
         check_2 = 0
-        for goti in colors[cls.chance]:
-            if goti.is_at_home():
+        for piece in colors[cls.chance]:
+            if piece.at_home():
                 check_1 += 1
             else:
-                max_moves = len(goti.path_list) - goti.curr_index - 1
+                max_moves = len(piece.path_list) - piece.curr_index - 1
                 if max_moves < cls.roll[0]:
                     check_2 += 1
 
@@ -284,60 +287,64 @@ class Dice:
                 Dice.update_panel()
 
 
-def align(x, y, color, path_list, flag):
+def armed(x, y, color, path_list, flag):
     container = []
     for i in range(2):
-        test = Coin(ludo.get_canvas(), x, y + i * 2 * Board.SQUARE_SIZE, color=color, path_list=path_list, flag=flag)
+        test = Piece(mensch.get_canvas(), x, y + i * 2 * Size.PATH_SIZE, color=color, path_list=path_list, flag=flag)
         container.append(test)
     for i in range(2):
-        test = Coin(ludo.get_canvas(), x + 2 * Board.SQUARE_SIZE, y + i * 2 * Board.SQUARE_SIZE, color=color,
-                    path_list=path_list, flag=flag)
+        test = Piece(mensch.get_canvas(), x + 2 * Size.PATH_SIZE, y + i * 2 * Size.PATH_SIZE, color=color,
+                     path_list=path_list, flag=flag)
         container.append(test)
 
     return container
 
 
-def startgame():
+def starting_game():
     if len(players) >= 2:
         for i in range(len(players)):
             if players[i].user:
                 turn.append(players[i].user)
         for i in range(len(turn)):
             for j in range(4):
-                colors[i][j].set_playername(turn[i])
+                colors[i][j].set_player_name(turn[i])
 
         tk.Button(text='ROLL', bg='gray', command=Dice.start, width=18, height=2).place(x=55, y=570)
 
-        tk.Label(ludo.get_frame(), text=f'Let\'s start with {turn[0]}', width=18, height=3,
-                 bg=Color.WHITE, font=("Helvetica", 16, "bold")).place(x=0, y=285)
+        tk.Label(mensch.get_frame(), text=f'Let\'s start with {turn[0]}', width=18, height=3,
+                 bg=Color.WHITE, font=("Helvetica", 15, "bold")).place(x=0, y=285)
 
         for num in range(len(players)):
             tk.Label(text=f'{num + 1}.{players[num].user}', font=("Helvetica", 18, "bold"),
                      fg=players[num].color, bg=Color.WHITE).place(x=10, y=50 + num * 40)
 
-        return False
+        return True
 
     else:
         tk.messagebox.showerror("Error", ' Game will start with at least 2 players!!! ')
-        return True
+        return False
 
 
-def on_closingroot():
+def close_root():
     if tkinter.messagebox.askokcancel("Quit", "Do you want to quit the game?"):
         root.destroy()
 
 
 def main():
+    global final_result
+    global winners
     global players
     global turn
     global position
     global colors
     global color_list
     color_list = ['Green', 'Blue', 'Yellow', 'Red']
-    players = []
-    turn = []
-    position = []
-    colors = []
+    final_result = list()
+    winners = list()
+    players = list()
+    turn = list()
+    position = list()
+    colors = list()
 
 
 def set_state():
@@ -346,18 +353,9 @@ def set_state():
             colors[i][j].change_state(0)
 
 
-# if __name__ == '__main__':
-#     main()
-#     root = tk.Tk()
-#     root.geometry('1000x640')
-#     root.title('Ludo')
-#     ludo = LudoBoard(root)
-#     ludo.create()
-
-
 def main_loop():
-    root.protocol("WM_DELETE_WINDOW", on_closingroot)
-    root.configure(bg=Color.DEFAULT)
+    root.protocol("WM_DELETE_WINDOW", close_root)
+    root.configure(bg=Color.BG)
     MenuBar(root)
     root.mainloop()
 
@@ -367,6 +365,38 @@ class Player:
         self.user = username
         self.pas = password
         self.color = color
+
+
+def log_result():
+    logging.basicConfig(filename='mensch_result.log', format='%(asctime)s %(message)s', level=logging.INFO)
+    logging.info(" {}".format(' '.join(final_result)))
+
+
+def result():
+    for i in range(len(players)):
+        x = 0
+        for j in range(len(winners)):
+            if players[i].user == winners[j]:
+                x += 1
+        if x == 4:
+            final_result.append(players[i].user)
+
+    if len(final_result) == len(players):
+        if len(final_result) == 2:
+            tk.messagebox.showinfo('Results', Text.FINAL_RESULT1.format(final_result[0], final_result[1]))
+            log_result()
+            root.quit()
+        elif len(final_result) == 3:
+            tk.messagebox.showinfo('Results',
+                                   Text.FINAL_RESULT2.format(final_result[0], final_result[1], final_result[2]))
+            log_result()
+            root.quit()
+        elif len(final_result) == 4:
+            tk.messagebox.showinfo('Results',
+                                   Text.FINAL_RESULT3.format(final_result[0], final_result[1], final_result[2],
+                                                             final_result[3]))
+            log_result()
+            root.quit()
 
 
 class MenuBar(tk.Frame):
@@ -384,22 +414,22 @@ class MenuBar(tk.Frame):
         game = tk.Menu(menu, tearoff=False)
 
         def start_game():
-            startgame()
-            if not startgame:
+            if starting_game():
                 game.entryconfig(0, state=tk.DISABLED)
                 game.entryconfig(1, state=tk.DISABLED)
 
         def new_game():
             global root
-            global ludo
+            global mensch
             root.destroy()
             main()
             set_state()
             root = tk.Tk()
-            root.geometry('1000x640')
-            root.title('Ludo')
-            ludo = LudoBoard(root)
-            ludo.create()
+            root.geometry('1000x660')
+            root.title('Mensch')
+            root.tk.call('wm', 'iconphoto', root._w, tk.PhotoImage(file='Images/icons/dice-none.png'))
+            mensch = MenschBoard(root)
+            mensch.create()
             MenuBar(root)
             main_loop()
 
@@ -419,14 +449,14 @@ class MenuBar(tk.Frame):
     def login_page():
         login = tk.Tk()
         login.wm_title("Login Page")
-        login.config(bg=Color.DEFAULT)
+        login.config(bg=Color.BG)
         login.geometry('350x300')
-        tk.Label(login, text='Login', font=("Times", 23, "bold"), bg=Color.DEFAULT).place(x=140, y=5)
-        tk.Label(login, text='Username :', bg=Color.DEFAULT, fg=Color.WHITE,
+        tk.Label(login, text='Login', font=("Times", 23, "bold"), bg=Color.BG).place(x=140, y=5)
+        tk.Label(login, text='Username :', bg=Color.BG, fg=Color.WHITE,
                  font=("Helvetica", 10, "bold")).place(x=40, y=80)
-        tk.Label(login, text='Password :', bg=Color.DEFAULT, fg=Color.WHITE,
+        tk.Label(login, text='Password :', bg=Color.BG, fg=Color.WHITE,
                  font=("Helvetica", 10, "bold")).place(x=40, y=120)
-        tk.Label(login, text='Color :', bg=Color.DEFAULT, fg=Color.WHITE,
+        tk.Label(login, text='Color :', bg=Color.BG, fg=Color.WHITE,
                  font=("Helvetica", 10, "bold")).place(x=40, y=160)
         user_text = tk.Entry(login, width=23)
         user_text.focus_set()
@@ -445,28 +475,28 @@ class MenuBar(tk.Frame):
                         tkinter.messagebox.showerror('Error', f'" {gamer.user} " was added before!')
                         login.destroy()
                 if color_choose.get() == 'Green':
-                    colors.append(align(2.1 * Board.SQUARE_SIZE, 2.1 * Board.SQUARE_SIZE, color='green',
+                    colors.append(armed(2.1 * Size.PATH_SIZE, 2.1 * Size.PATH_SIZE, color='green',
                                         path_list=path.green_path, flag=len(colors)))
                     color_list.remove('Green') and turn.append(color_choose.get())
                     players.append(Player(user_text.get(), pass_text.get(), color_choose.get()))
                     login.destroy()
 
                 elif color_choose.get() == 'Red':
-                    colors.append(align(2.1 * Board.SQUARE_SIZE, 11.1 * Board.SQUARE_SIZE, color='red',
+                    colors.append(armed(2.1 * Size.PATH_SIZE, 11.1 * Size.PATH_SIZE, color='red',
                                         path_list=path.red_path, flag=len(colors)))
                     color_list.remove('Red') and turn.append(color_choose.get())
                     players.append(Player(user_text.get(), pass_text.get(), color_choose.get()))
                     login.destroy()
 
                 elif color_choose.get() == 'Blue':
-                    colors.append(align(11.1 * Board.SQUARE_SIZE, 11.1 * Board.SQUARE_SIZE, color='blue',
+                    colors.append(armed(11.1 * Size.PATH_SIZE, 11.1 * Size.PATH_SIZE, color='blue',
                                         path_list=path.blue_path, flag=len(colors)))
                     color_list.remove('Blue') and turn.append(color_choose.get())
                     players.append(Player(user_text.get(), pass_text.get(), color_choose.get()))
                     login.destroy()
 
                 elif color_choose.get() == 'Yellow':
-                    colors.append(align(11.1 * Board.SQUARE_SIZE, 2.1 * Board.SQUARE_SIZE, color='yellow',
+                    colors.append(armed(11.1 * Size.PATH_SIZE, 2.1 * Size.PATH_SIZE, color='yellow',
                                         path_list=path.yellow_path, flag=len(colors)))
                     color_list.remove('Yellow') and turn.append(color_choose.get())
                     players.append(Player(user_text.get(), pass_text.get(), color_choose.get()))
@@ -484,17 +514,12 @@ class MenuBar(tk.Frame):
         tk.messagebox.showinfo('How to play?!', Text.HTP)
 
 
-# if __name__ == '__main__':
-#     root.protocol("WM_DELETE_WINDOW", on_closingroot)
-#     root.configure(bg=Color.DEFAULT)
-#     MenuBar(root)
-#     root.mainloop()
-
 if __name__ == '__main__':
     main()
     root = tk.Tk()
-    root.geometry('1000x640')
-    root.title('Ludo')
-    ludo = LudoBoard(root)
-    ludo.create()
+    root.geometry('1000x660')
+    root.title('Mensch')
+    root.tk.call('wm', 'iconphoto', root._w, tk.PhotoImage(file='Images/icons/dice-none.png'))
+    mensch = MenschBoard(root)
+    mensch.create()
     main_loop()
