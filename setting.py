@@ -3,12 +3,12 @@ class Color:
     RED = '#F71313'
     YELLOW = '#FFFF00'
     BLUE = '#3575EC'
-    DEFAULT = '#b5b5b5'
+    BG = '#b5b5b5'
     WHITE = '#fff'
 
 
-class Board:
-    SQUARE_SIZE = 40
+class Size:
+    PATH_SIZE = 40
     BOARD_WIDTH = 640
     BOARD_HEIGHT = 620
     POINTS = [(0, 0), (0, 1), (1, 0), (1, 1)]
@@ -26,13 +26,32 @@ class Members:
 
 class Text:
     MADE_BY = 'Made by: Eshaq Farrokhi'
-    HTP = 'Welcome to our Mensch(Ludo) game!\n' \
-          'To start the game first, you should login by press "Add Player" button in menu > Game.' \
-          'After adding at least 2 members; you can press "Start game" to start the game :)\n' \
+    HTP = 'Welcome to our Mensch(Ludo) game!\n\n' \
+          'To start the game first, you should login \nby press "Add Player" button in menu > Game.' \
+          'After adding\n at least 2 members; you can press "Start game" to start the game :)\n' \
           'In the left panel you can see the players ,turn and dice number. ' \
-          'You can roll a dice in your turn and go on until treading all the home paths and jump into the maze;' \
+          'You can roll a dice in your turn\n and go on until treading all the home paths and jump into the Black Hole;' \
           'in this way you should be careful! Because the other pieces can attack you.' \
-          'Each player that has the most jumped piece will win, so move on.'
+          'Each player that has the most jumped piece will win, so move on...\n\n' \
+          '* Rules :\n\n' \
+          '\t- Players must be at least 2.\n\n' \
+          '\t- To win , you should pass the colorful\n' \
+          '\t  homes and go inside the Black Hole.\n\n' \
+          '\t- You can\'t move your pieces until\n' \
+          '\t  got 6 and send your pieces into the board.\n\n' \
+          '\t- You can\'t roll or move out of your turn.'
+
+    FINAL_RESULT1 = '* Final result of this game:\n\n' \
+                    '\t1. {}\n\n\t2. {}\n\n' \
+                    '(Press "ok" to log the result and finish the game)'
+
+    FINAL_RESULT2 = '* Final result of this game:\n\n' \
+                    '\t1. {}\n\n\t2. {}\n\n\t3. {}\n\n' \
+                    '(Press "ok" to log the result and finish the game)'
+
+    FINAL_RESULT3 = '* Final result of this game:\n\n' \
+                    '\t1. {}\n\n\t2. {}\n\n\t3. {}\n\n\t4. {}\n\n' \
+                    '(Press "ok" to log the result and finish the game)'
 
 
 class Path:
@@ -57,42 +76,30 @@ class Path:
         self.by = by
         self.count = count
 
-    def start_populating(self):
+    def broadcast(self):
 
-        # 1
         self.update_coordinates(60, 260, 540, 340, 5)
         self.direct(pow_index=0, direction='right')
-        # 2
         self.update_coordinates(260, 220, 340, 380, 5)
         self.direct(pow_index=3, direction='up')
-        # 3
         self.update_coordinates(260, 20, 340, 580, 3)
         self.direct(direction='right')
-        # 4
         self.update_coordinates(340, 60, 260, 540, 5)
         self.direct(pow_index=0, direction='down')
-        # 5
         self.update_coordinates(380, 260, 220, 340, 5)
         self.direct(pow_index=3, direction='right')
-        # 6
         self.update_coordinates(580, 260, 20, 340, 3)
         self.direct(direction='down')
-        # 7
         self.update_coordinates(540, 340, 60, 260, 5)
         self.direct(pow_index=0, direction='left')
-        # 8
         self.update_coordinates(340, 380, 260, 220, 5)
         self.direct(pow_index=3, direction='down')
-        # 9
         self.update_coordinates(340, 580, 260, 20, 3)
         self.direct(direction='left')
-        # 10
         self.update_coordinates(260, 540, 340, 60, 5)
         self.direct(pow_index=0, direction='up')
-        # 11
         self.update_coordinates(220, 340, 380, 260, 6)
         self.direct(pow_index=3, direction='left')
-        # 12
         self.update_coordinates(20, 300, 580, 300, 7)
         self.direct(direction='right')
 
@@ -103,10 +110,10 @@ class Path:
                 p = 1
             else:
                 p = 0
-            self.green_path.append((self.gx + k * i * Board.SQUARE_SIZE, self.gy, p))
-            self.red_path.append((self.gy, self.ry - k * i * Board.SQUARE_SIZE, p))
-            self.blue_path.append((self.ry - k * i * Board.SQUARE_SIZE, self.by, p))
-            self.yellow_path.append((self.by, self.gx + k * i * Board.SQUARE_SIZE, p))
+            self.green_path.append((self.gx + k * i * Size.PATH_SIZE, self.gy, p))
+            self.red_path.append((self.gy, self.ry - k * i * Size.PATH_SIZE, p))
+            self.blue_path.append((self.ry - k * i * Size.PATH_SIZE, self.by, p))
+            self.yellow_path.append((self.by, self.gx + k * i * Size.PATH_SIZE, p))
 
     def direct_vertical(self, k, pow_index=-1):
 
@@ -115,10 +122,10 @@ class Path:
                 p = 1
             else:
                 p = 0
-            self.green_path.append((self.gx, self.gy - k * i * Board.SQUARE_SIZE, p))
-            self.red_path.append((self.gy - k * i * Board.SQUARE_SIZE, self.ry, p))
-            self.blue_path.append((self.ry, self.by + k * i * Board.SQUARE_SIZE, p))
-            self.yellow_path.append((self.by + k * i * Board.SQUARE_SIZE, self.gx, p))
+            self.green_path.append((self.gx, self.gy - k * i * Size.PATH_SIZE, p))
+            self.red_path.append((self.gy - k * i * Size.PATH_SIZE, self.ry, p))
+            self.blue_path.append((self.ry, self.by + k * i * Size.PATH_SIZE, p))
+            self.yellow_path.append((self.by + k * i * Size.PATH_SIZE, self.gx, p))
 
     def direct(self, direction, pow_index=-1):
         if direction == 'right':
@@ -132,4 +139,4 @@ class Path:
 
 
 path = Path()
-path.start_populating()
+path.broadcast()
