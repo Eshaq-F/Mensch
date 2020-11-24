@@ -1,6 +1,7 @@
 import tkinter.messagebox
 import logging
 from tkinter import ttk
+import tkinter as tk
 from time import sleep
 from random import choice
 from PIL import ImageTk, Image
