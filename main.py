@@ -382,6 +382,11 @@ def result():
         if x == 4:
             final_result.append(players[i].user)
 
+    for num in range(len(players)):
+        name = winners.count(f'{players[num].user}')
+        tk.Label(text=f'{name}', width=4,font=("Helvetica", 16, "bold"),
+                 fg=players[num].color, bg=Color.WHITE).place(x=175, y=50 + num * 40)if name >= 1 else None
+
     if len(final_result) == len(players):
         if len(final_result) == 2:
             tk.messagebox.showinfo('Results', Text.FINAL_RESULT1.format(final_result[0], final_result[1]))
