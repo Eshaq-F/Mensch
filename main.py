@@ -381,6 +381,8 @@ def result():
                 x += 1
         if x == 4:
             final_result.append(players[i].user)
+            for z in winners:
+                winners.remove(players[i].user)
 
     for num in range(len(players)):
         name = winners.count(f'{players[num].user}')
